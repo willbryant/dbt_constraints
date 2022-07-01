@@ -97,11 +97,10 @@
     select c.oid as constraint_name
         , upper(col.attname) as column_name
     from pg_constraint c
-    cross join lateral unnest(c.conkey) as con(conkey)
     join pg_class tbl on tbl.oid = c.conrelid
     join pg_namespace ns on ns.oid = tbl.relnamespace
     join pg_attribute col on (col.attrelid = tbl.oid
-                            and col.attnum = con.conkey)
+                            and col.attnum = ANY(c.conkey))
     where c.contype in ('p', 'u')
     and ns.nspname ilike '{{table_relation.schema}}'
     and tbl.relname ilike '{{table_relation.identifier}}'
@@ -131,11 +130,10 @@
     select c.oid as fk_name
         , upper(col.attname) as fk_column_name
     from pg_constraint c
-    cross join lateral unnest(c.conkey) as con(conkey)
     join pg_class tbl on tbl.oid = c.conrelid
     join pg_namespace ns on ns.oid = tbl.relnamespace
     join pg_attribute col on (col.attrelid = tbl.oid
-                            and col.attnum = con.conkey)
+                            and col.attnum = ANY(c.conkey))
     where c.contype in ('f')
     and ns.nspname ilike '{{table_relation.schema}}'
     and tbl.relname ilike '{{table_relation.identifier}}'
