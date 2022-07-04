@@ -95,6 +95,10 @@
   {{ return(adapter.dispatch('truncate_relation')(relation)) }}
 {% endmacro %}
 
+{% macro rename_relation(from_relation, to_relation) -%}
+  {{ return(adapter.dispatch('rename_relation')(from_relation, to_relation)) }}
+{% endmacro %}
+
 
 
 

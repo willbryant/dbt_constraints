@@ -207,3 +207,24 @@
 {% macro redshift__truncate_relation(relation) -%}
     {{ return(adapter.dispatch('truncate_relation', 'dbt')(relation)) }}
 {% endmacro %}
+
+{% macro redshift__rename_relation(from_relation, to_relation) -%}
+    {%- set lookup_query -%}
+    select constraint_name
+    from information_schema.table_constraints
+    where table_schema = '{{from_relation.schema}}'
+    and table_name='{{from_relation.identifier}}'
+    and constraint_type in ('FOREIGN KEY')
+    {%- endset -%}
+    {%- set constraint_list = run_query(lookup_query) -%}
+
+    {%- for constraint_name in constraint_list.columns["constraint_name"].values() -%}
+        {%- set drop_statement -%}
+        ALTER TABLE {{from_relation}} DROP CONSTRAINT "{{constraint_name}}" CASCADE
+        {%- endset -%}
+        {%- do log("Dropping constraint: " ~ constraint_name ~ " from table " ~ from_relation, info=false) -%}
+        {%- do run_query(drop_statement) -%}
+    {% endfor %}
+
+    {{ return(adapter.dispatch('rename_relation', 'dbt')(from_relation, to_relation)) }}
+{% endmacro %}
